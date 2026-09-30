@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-h5/
+.env.local
+.env.*.local
+project.private.config.json
+cloudfunctions/ledger/index.js
+.DS_Store
+coverage/
+.swc/

@@ -1,0 +1,16 @@
+{
+  "miniprogramRoot": "dist/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "projectname": "一起去-旅行AA账本",
+  "description": "旅行共享记账与AA结算",
+  "appid": "wxf31f6bf177ee9207",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "postcss": true,
+    "urlCheck": true,
+    "enhance": true,
+    "minifyWXML": true
+  }
+}

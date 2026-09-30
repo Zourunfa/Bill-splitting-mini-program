@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-09-30T05:59:44.989Z",
+  "tripId": "t_84b50a7383693a8f7b1206087c9d1ee1",
+  "checks": [
+    "rename_during_edit",
+    "reject_same_expense_conflict",
+    "persisted_amount_and_title"
+  ],
+  "passed": true
+}
