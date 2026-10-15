@@ -1,11 +1,13 @@
 {
   "name": "jiqian-mini",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "private": true,
   "description": "一起去 · 旅行共享 AA 账本",
   "scripts": {
     "dev:weapp": "taro build --type weapp --watch",
+    "dev:weapp:prod": "taro build --type weapp --watch --env production --mode production",
     "build:weapp": "taro build --type weapp",
+    "build:weapp:prod": "taro build --type weapp --env production --mode production",
     "dev:h5": "taro build --type h5 --watch",
     "build:h5": "taro build --type h5",
     "build:cloud": "node scripts/build-cloud.mjs",
