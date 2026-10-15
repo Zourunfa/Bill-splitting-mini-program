@@ -3,10 +3,13 @@ import { Amount, Avatar, Empty, ExpenseRow, Page, SectionTitle, TripHeader, Trip
 import { go, useTrip } from '../../store';
 import { getBalances, money } from '../../../shared/ledger';
 import { CATEGORIES } from '../../../shared/types';
+import { useTripShare } from '../../share';
 import { TripName } from '../../components/trip-name';
 
+// 总览中的金额和分类统计从当前 Trip 派生，不重复保存一份容易过期的统计状态。
 export default function OverviewPage() {
   const { trip, user } = useTrip();
+  useTripShare(trip);
   if (!trip) return <TripMissing />;
   const expenses = trip.expenses.filter(e => !e.deleted);
   const total = expenses.reduce((s, e) => s + e.amount, 0);

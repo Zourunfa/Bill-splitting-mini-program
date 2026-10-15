@@ -4,6 +4,8 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { chromium } from '@playwright/test';
 
+// 本地 H5 冒烟脚本：启动 dist-h5 静态服务，用真实浏览器检查记账交互和页面错误。
+// 执行前需要先构建 H5；脚本会在 artifacts/ 写截图，且不会连接线上账本。
 const root = resolve('dist-h5');
 const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
 const server = createServer(async (req, res) => {

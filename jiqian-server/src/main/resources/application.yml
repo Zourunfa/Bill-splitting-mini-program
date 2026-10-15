@@ -1,0 +1,42 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  config:
+    import: optional:file:./.env[.properties]
+  application:
+    name: jiqian-server
+  datasource:
+    # 本地默认账号仅供开发；部署时请通过环境变量覆盖数据库连接和密码。
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/jiqian?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USER:jiqian}
+    password: ${DB_PASSWORD:jiqian_dev_only}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      connection-timeout: 10000
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: 'NULL'
+
+app:
+  wechat:
+    app-id: ${WECHAT_APP_ID:}
+    app-secret: ${WECHAT_APP_SECRET:}
+    proxy-host: ${WECHAT_PROXY_HOST:}
+    proxy-port: ${WECHAT_PROXY_PORT:7890}
+    code2session-url: https://api.weixin.qq.com/sns/jscode2session
+  jwt:
+    # 仅供本地开发；部署环境必须通过 JWT_SECRET 注入随机的 32 字节以上密钥。
+    secret: ${JWT_SECRET:local-development-secret-change-before-deploy-jiqian}
+    ttl: ${JWT_TTL:14d}
+
+logging:
+  level:
+    com.jiqian: INFO

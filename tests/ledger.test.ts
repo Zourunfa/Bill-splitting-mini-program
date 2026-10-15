@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyCommand, createTrip, equalShares, expenseSnapshot, getBalances, joinTrip, money, parseAmount, suggestTransfers } from '../shared/ledger';
 import type { ExpenseInput, Trip } from '../shared/types';
 
+// 领域规则测试：用固定时间和小型旅行样本验证金额、权限、重试与余额结果。
 function fixture(): Trip {
   let trip = createTrip({ name: '川西旅行', destination: '川西', startDate: '2026-10-01', endDate: '2026-10-07' }, { id: 'a', name: '小王' }, 'trip', 'invite', 1);
   trip = joinTrip(trip, { id: 'b', name: '小李' }, 2);

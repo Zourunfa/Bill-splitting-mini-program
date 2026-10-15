@@ -1,6 +1,8 @@
 import { applyCommand, createTrip, joinTrip } from './ledger';
 import type { Trip, User } from './types';
 
+// 演示数据通过正式业务规则生成，让离线体验也走真实的 AA 分摊和余额计算逻辑。
+// 当前身份和账本只保存在本机，不会同步给其他用户。
 export const DEMO_USERS: User[] = [
   { id: 'demo_me', name: '我' }, { id: 'demo_lin', name: '小林' },
   { id: 'demo_yu', name: '阿宇' }, { id: 'demo_tang', name: '糖糖' }

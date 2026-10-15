@@ -5,12 +5,16 @@ import { isDemo, notifyError, useTrip } from '../../store';
 import { requestId } from '../../services/ledger';
 import { getBalances, suggestTransfers } from '../../../shared/ledger';
 import type { Command } from '../../../shared/types';
+import { useTripShare } from '../../share';
 
+// 结算页只生成手动转账建议；小程序不会发起真实支付，双方需分别标记和确认。
 export default function SettlementPage() {
   const { trip, user, run, reload } = useTrip();
+  useTripShare(trip);
   const [busy, setBusy] = useState(false);
   if (!trip) return <TripMissing />;
   const balances = getBalances(trip), transfers = suggestTransfers(trip);
+  // 建议算法已预留 pending 金额，避免再次按同一笔欠款重复发起转账。
   const pending = trip.settlements.filter(s => s.status === 'pending');
   const cleared = balances.every(b => b.balance === 0) && pending.length === 0;
   const owner = trip.creatorId === user.id;

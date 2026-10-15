@@ -1,15 +1,17 @@
 import { Button, Input, Text, View } from '@tarojs/components';
-import Taro, { useShareAppMessage } from '@tarojs/taro';
+import Taro from '@tarojs/taro';
 import { useState } from 'react';
 import { Amount, Avatar, Page, SectionTitle, TripHeader, TripMissing, confirm } from '../../components/ui';
 import { isDemo, notifyError, useTrip } from '../../store';
 import { getBalances } from '../../../shared/ledger';
 import { TripName } from '../../components/trip-name';
+import { useTripShare } from '../../share';
 
+// 旅伴页集中显示成员余额、邀请码和账本动态；移除成员前必须先结清。
 export default function MembersPage() {
   const { trip, user, run, addDemoMember, switchUser } = useTrip();
+  useTripShare(trip);
   const [name, setName] = useState(''), [busy, setBusy] = useState(false);
-  useShareAppMessage(() => ({ title: `一起记账吧 · ${trip?.name || '旅行AA账本'}`, path: `/pages/trips/index?invite=${encodeURIComponent(trip?.inviteCode || '')}` }));
   if (!trip) return <TripMissing />;
   const balances = getBalances(trip), owner = trip.creatorId === user.id;
   async function add() {

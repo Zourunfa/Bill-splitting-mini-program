@@ -1,10 +1,11 @@
 import { Button, Text, View } from '@tarojs/components';
 import Taro from '@tarojs/taro';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import { money } from '../../shared/ledger';
 import type { Category, Expense, Member, Trip } from '../../shared/types';
 import { go, isDemo, useLedger } from '../store';
 
+// 页面共用的展示积木。账本数据仍由页面/store 管理，这里只负责重复出现的 UI。
 export const categoryIcon: Record<Category, string> = { 餐饮: '食', 住宿: '宿', 交通: '行', 门票: '游', 其他: '杂' };
 export function Avatar({ member, small = false }: { member?: Member; small?: boolean }) {
   return <View className={`avatar ${small ? 'avatar-small' : ''}`} style={{ backgroundColor: member?.color || '#456c57' }}>{member?.name.slice(0, 1) || '?'}</View>;
@@ -18,13 +19,16 @@ export function SectionTitle({ title, subtitle, action, onAction }: { title: str
 export function Empty({ title, detail }: { title: string; detail?: string }) {
   return <View className='empty'><View className='empty-symbol'>✦</View><Text className='empty-title'>{title}</Text>{detail && <Text className='muted'>{detail}</Text>}</View>;
 }
-export function Page({ children, trip, active }: PropsWithChildren<{ trip?: Trip; active?: string }>) {
+export function Page({ children, trip, active, footerAction }: PropsWithChildren<{ trip?: Trip; active?: string; footerAction?: ReactNode }>) {
   const { error, reload } = useLedger();
   return <View className={`page ${trip ? 'page-with-tabs' : ''}`}>
     {isDemo && <View className='demo-banner'><Text>本地演示 · 数据只保存在当前设备</Text><Text className='text-link' onClick={() => go('trips')}>切换成员</Text></View>}
     {error && <View className='error-banner' onClick={() => void reload()}>{error} · 点击重试</View>}
     {children}
+    {trip && footerAction && <View className='fixed-action-spacer' />}
+    {/* 旅行内四个 tab 共用同一套导航，切换时保留对应 tripId。 */}
     {trip && <View className='bottom-nav'>
+      {footerAction && <View className='fixed-page-action'>{footerAction}</View>}
       {[['overview', '总览', '◫'], ['bills', '账单', '≡'], ['members', '旅伴', '♧'], ['settlement', '结算', '⇄']].map(([key, label, icon]) => <View key={key} className={`nav-item ${active === key ? 'active' : ''}`} onClick={() => {
         if (key !== active) void Taro.redirectTo({ url: `/pages/${key}/index?tripId=${trip.id}` });
       }}><Text className='nav-icon'>{icon}</Text><Text>{label}</Text></View>)}

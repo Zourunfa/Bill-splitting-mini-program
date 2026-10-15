@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+.idea/
+*.iml
+target/*
+!target/jiqian-server-0.1.0.jar
+*.log
+.DS_Store

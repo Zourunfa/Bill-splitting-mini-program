@@ -2,6 +2,8 @@
 
 用 Taro 4.3 + React 18 + TypeScript 开发的微信小程序，适合朋友一起旅行时记录共同开销、均分费用和确认结算。
 
+刚开始读项目，可以先看[项目架构与代码导览](docs/project-architecture-guide.md)，里面按新手视角说明页面、数据流、三种运行模式和各目录的用途。
+
 ## 已实现
 
 - 创建旅行、邀请码加入、微信小程序卡片分享邀请；加入时填写朋友认识的名字。
@@ -110,6 +112,8 @@ npm run build:weapp
 
 2026-09-30 14:12 已上传并确认体验版 **0.1.3**：按用户要求移除记账表单的本机草稿保存与恢复，旧草稿缓存不再读取；返回账单或前往结算时销毁编辑页面，未提交内容不跨页面保留。新增账单从空白开始，重新编辑只读取已保存账单。云端存量账单与已部署的冲突校验不变。34 个测试、类型检查、微信/H5 构建及 H5 操作验证通过，覆盖旧缓存不被恢复、离开和刷新后未提交内容丢弃、已提交记录持久化。
 
+2026-09-30 14:57 已上传并确认体验版 **0.1.4**（后台另有 0.1.3 审核中，本次未操作审核）：账单页“＋ 记一笔”随底部固定导航常驻，操作区位于导航上方，列表末尾预留空间，关闭的旅行不显示按钮。类型检查、微信/H5 构建通过，并在 390px 手机宽度验证滚动前后按钮位置一致、按钮与导航不重叠、最后一笔账单完整可见、点击进入记账。截图见 `artifacts/bills-fixed-action.png`。
+
 ## 账本规则
 
 ```text
@@ -159,7 +163,13 @@ shared/
 cloud/               云函数 TypeScript 源码
 cloudfunctions/      微信开发者工具部署目录
 tests/               计算、权限、幂等和模拟事务测试
-scripts/             云函数构建、浏览器验证
+scripts/             云函数构建、导入转换、浏览器验证
 ```
+
+## Spring Boot 后端迁移
+
+并行 Java 后端位于 [jiqian-server](jiqian-server/README.md)，采用 Java 17、Spring Boot 3、MySQL 8 和 MyBatis。它保留现有云函数并行可选：`.env.local` 配置 `TARO_APP_API_BASE_URL` 后，微信端使用 Java API；清空该值并保留 `TARO_APP_CLOUD_ENV` 时仍走云函数。H5 和本地演示不受影响。
+
+迁移方案与云数据库导入步骤见 [后端说明](jiqian-server/README.md)。正式切换前，先导出并导入 `users`、`trips` 数据，配置微信 AppID/AppSecret、HTTPS 域名和小程序 request 合法域名，再用体验版验证。
 
 相关官方文档：[Taro 编译配置](https://docs.taro.zone/docs/config/)、[微信小程序调用 CloudBase 云函数](https://docs.cloudbase.net/recipes/add-cloud-function-wechat-miniprogram)、[CloudBase 数据库事务](https://docs.cloudbase.net/database/transaction)。

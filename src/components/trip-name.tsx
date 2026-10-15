@@ -5,6 +5,7 @@ import type { Trip } from '../../shared/types';
 import { notifyError, useLedger } from '../store';
 import { Avatar } from './ui';
 
+// 成员名字按旅行分别保存；修改名字不会改变微信身份或账单金额。
 export function TripName({ trip }: { trip: Trip }) {
   const { user, run } = useLedger();
   const [editing, setEditing] = useState(false);

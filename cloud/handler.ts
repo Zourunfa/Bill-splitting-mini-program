@@ -2,6 +2,8 @@ import { createHash, randomBytes } from 'node:crypto';
 import { applyCommand, assert, createTrip, joinTrip, text, validId } from '../shared/ledger';
 import type { Command, Trip, TripInput, User } from '../shared/types';
 
+// 云函数适配层：识别请求动作、用 OpenID 定身份，并在事务中读改写账本。
+// 账本规则集中在 shared/ledger.ts，避免金额和权限逻辑散落在请求处理分支中。
 interface Doc { get(): Promise<{ data: unknown }>; set(input: { data: unknown }): Promise<unknown> }
 interface Query { get(): Promise<{ data: unknown[] }>; orderBy(field: string, order: 'desc'): Query; limit(count: number): Query }
 interface Collection { doc(id: string): Doc; where(filter: Record<string, unknown>): Query }
@@ -26,6 +28,7 @@ async function maybeGet<T>(doc: Doc): Promise<T | undefined> {
   }
 }
 function checkSize(trip: Trip) {
+  // 一趟旅行保存在一个 CloudBase 文档中，写入前检查平台的单文档容量限制。
   assert(Buffer.byteLength(JSON.stringify(trip), 'utf8') <= 800_000, '账本已达第一版容量上限，请新建旅行账本');
 }
 export function createHandler({ db, getUserId, now = Date.now, makeInvite = () => randomBytes(16).toString('hex') }: Dependencies) {
@@ -81,6 +84,7 @@ export function createHandler({ db, getUserId, now = Date.now, makeInvite = () =
         const id = validId(event.tripId);
         assert(event.command && typeof event.command === 'object', '操作无效');
         const trip = await db.runTransaction(async tx => {
+          // 在事务里重新读取最新账本，避免并发请求都从同一份旧数据开始修改。
           const doc = tx.collection('trips').doc(id);
           const original = await maybeGet<Trip>(doc);
           assert(original, '旅行不存在或不可访问');

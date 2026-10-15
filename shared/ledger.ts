@@ -1,5 +1,7 @@
 import { CATEGORIES, type Balance, type Command, type Expense, type ExpenseInput, type Member, type Transfer, type Trip, type TripInput, type User } from './types';
 
+// 放置不依赖页面、微信 SDK 或数据库的纯账本规则；本地演示和云函数共用它。
+// Java 后端的 LedgerRules.java 实现对应规则，修改时应保持两边行为一致。
 const COLORS = ['#456c57', '#b77d49', '#7c79a7', '#5e859f', '#ad7377', '#78916b'];
 export function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -19,6 +21,7 @@ export function validAmount(value: unknown): number {
   return value;
 }
 export function parseAmount(value: string): number {
+  // 从输入文本转成人民币“分”的整数，避免使用小数计算金额造成精度误差。
   assert(/^\d{1,7}(\.\d{1,2})?$/.test(value.trim()), '请输入金额，最多两位小数');
   const [yuan, cents = ''] = value.trim().split('.');
   return validAmount(Number(yuan) * 100 + Number(cents.padEnd(2, '0')));
@@ -38,6 +41,7 @@ export function validId(value: unknown): string {
 export function equalShares(amount: number, ids: string[]): Record<string, number> {
   validAmount(amount);
   assert(ids.length > 0 && new Set(ids).size === ids.length, '请至少选择一位分摊成员，且不能重复');
+  // 成员排序后再分配余数，保证选择顺序不同也会得到相同的分摊结果。
   const sorted = [...ids].sort();
   const base = Math.floor(amount / sorted.length), remainder = amount % sorted.length;
   return Object.fromEntries(sorted.map((id, index) => [id, base + (index < remainder ? 1 : 0)]));
@@ -66,16 +70,19 @@ export function getBalances(trip: Trip, includePending = false): Balance[] {
       if (member) member.share += value;
     }
   }
+  // 真实余额只计入已确认转账；生成新建议时可把待确认转账也先预留。
   for (const s of trip.settlements) {
     if (s.status !== 'confirmed' && !(includePending && s.status === 'pending')) continue;
     const from = result.get(s.fromId), to = result.get(s.toId);
     if (from) from.sent += s.amount;
     if (to) to.received += s.amount;
   }
+  // 正数代表待收，负数代表待付；已付出去的金额会减少欠款。
   for (const b of result.values()) b.balance = b.paid - b.share + b.sent - b.received;
   return [...result.values()];
 }
 export function suggestTransfers(trip: Trip): Transfer[] {
+  // 每次配对一位欠款人和一位待收款人，逐步把所有余额结清。
   const balances = getBalances(trip, true);
   const debtors = balances.filter(b => b.balance < 0).map(b => ({ id: b.memberId, amount: -b.balance })).sort((a, b) => b.amount - a.amount || a.id.localeCompare(b.id));
   const creditors = balances.filter(b => b.balance > 0).map(b => ({ id: b.memberId, amount: b.balance })).sort((a, b) => b.amount - a.amount || a.id.localeCompare(b.id));
@@ -107,6 +114,7 @@ function requireMember(trip: Trip, actor: string) {
   assert(trip.members.some(m => m.id === actor && m.active), '你不是这次旅行的有效成员');
 }
 function audit(trip: Trip, actor: string, action: string, targetId: string, now: number) {
+  // 每个账本变更递增版本号并留下动态；控制数组大小，避免账本无限增长。
   trip.version++;
   trip.audit.push({ actorId: actor, action, targetId, at: now });
   // 小规模旅行使用单文档事务，保留最近 200 条操作记录。
@@ -126,6 +134,8 @@ export function joinTrip(original: Trip, user: User, now = Date.now()): Trip {
   return trip;
 }
 export function applyCommand(original: Trip, actor: string, command: Command, now = Date.now()): Trip {
+  // 所有修改都从这里进入：先确认成员身份，再按命令类型校验并创建新账本副本。
+  // 编辑账单会比较原账单快照，避免并发修改时后保存的人静默覆盖新内容。
   assert(command && typeof command === 'object', '操作无效');
   requireMember(original, actor);
   const trip: Trip = JSON.parse(JSON.stringify(original));

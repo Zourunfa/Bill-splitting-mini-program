@@ -8,3 +8,7 @@ cloudfunctions/ledger/index.js
 .DS_Store
 coverage/
 .swc/
+jiqian-server/target/
+jiqian-server/.env
+jiqian-server/.idea/
+jiqian-server/*.iml

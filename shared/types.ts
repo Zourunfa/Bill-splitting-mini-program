@@ -1,3 +1,7 @@
+/**
+ * 小程序与 CloudBase 共用的“账本语言”。前后端都围绕这些结构传数据，
+ * 改字段时要同步考虑 Java 的 Models.java 和数据库映射。
+ */
 export const CATEGORIES = ['餐饮', '住宿', '交通', '门票', '其他'] as const;
 export type Category = typeof CATEGORIES[number];
 
@@ -11,6 +15,7 @@ export interface ExpenseInput {
   date: string;
   note: string;
 }
+/** 一条旅行开销。amount 和 shares 都用“分”；deleted 为 true 表示软删除。 */
 export interface Expense extends ExpenseInput {
   id: string;
   creatorId: string;
@@ -51,6 +56,7 @@ export interface User { id: string; name: string }
 export interface Balance { memberId: string; paid: number; share: number; received: number; sent: number; balance: number }
 export interface Transfer { fromId: string; toId: string; amount: number }
 
+/** 客户端提交给服务端的动作；服务端仍须重新检查权限，不能只信任前端按钮。 */
 export type Command =
   | { type: 'addExpense'; requestId: string; expense: ExpenseInput }
   | { type: 'editExpense'; expenseId: string; expense: ExpenseInput; expectedVersion: number; expectedExpenseSnapshot?: string }

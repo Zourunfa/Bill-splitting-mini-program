@@ -1,3 +1,4 @@
+/* 全局设计变量和跨页面样式；Taro 会按 config/index.ts 的设计宽度换算尺寸。 */
 $green: #456c57;
 $ink: #26392e;
 $muted: #8b9289;
@@ -179,3 +180,8 @@ button[disabled] { opacity: .45; }
 .trip-name-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .trip-name-value { display: block; font-size: 28px; font-weight: 600; overflow-wrap: anywhere; }
 .trip-name-edit { width: auto; flex-shrink: 0; font-size: 24px; line-height: 66px; padding: 0 20px; }
+
+// 操作区随固定导航定位，自动避开导航实际高度和底部安全区。
+.fixed-page-action { position: absolute; bottom: 100%; left: 0; right: 0; padding: 20px 36px; background: $paper; border-top: 1px solid #e9ece3; }
+.fixed-page-action .button-primary { display: block; width: 100%; }
+.fixed-action-spacer { height: 132px; }

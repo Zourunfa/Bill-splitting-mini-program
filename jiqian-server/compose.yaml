@@ -1,0 +1,39 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: jiqian
+      MYSQL_USER: jiqian
+      MYSQL_PASSWORD: ${DB_PASSWORD:-jiqian_dev_only}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_dev_only}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - jiqian-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      DB_URL: jdbc:mysql://mysql:3306/jiqian?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      DB_USER: jiqian
+      DB_PASSWORD: ${DB_PASSWORD:-jiqian_dev_only}
+      WECHAT_APP_ID: ${WECHAT_APP_ID:-}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-}
+      WECHAT_PROXY_HOST: ${WECHAT_PROXY_HOST_DOCKER:-}
+      WECHAT_PROXY_PORT: ${WECHAT_PROXY_PORT:-7890}
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-before-deploy-jiqian}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+
+volumes:
+  jiqian-mysql:

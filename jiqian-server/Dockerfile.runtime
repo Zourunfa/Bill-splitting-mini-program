@@ -1,0 +1,6 @@
+# 用本机 Maven Wrapper 编译后，再将 Spring Boot JAR 放入轻量运行时镜像。
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY target/jiqian-server-0.1.0.jar /app/app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

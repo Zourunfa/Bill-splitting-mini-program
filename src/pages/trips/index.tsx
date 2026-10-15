@@ -6,8 +6,11 @@ import { go, isDemo, notifyError, useLedger } from '../../store';
 import { requestId } from '../../services/ledger';
 import { money } from '../../../shared/ledger';
 import { DEMO_USERS } from '../../../shared/demo';
+import { useAppShare } from '../../share';
 
+// 旅行列表是入口页：在这里创建账本、用邀请码加入，也提供仅本机可用的演示身份切换。
 export default function TripsPage() {
+  useAppShare();
   const { trips, user, loading, create, join, reload, switchUser, resetDemo } = useLedger();
   const router = useRouter();
   const [panel, setPanel] = useState<'create' | 'join' | null>(router.params.invite ? 'join' : null);
@@ -26,6 +29,7 @@ export default function TripsPage() {
     if (busy || !nickname.trim()) return;
     setBusy(true);
     try {
+      // 表单通过 store/service 提交，因此演示、云函数和 Java 模式共用同一套界面。
       const trip = panel === 'create'
         ? await create({ name, destination, startDate, endDate }, nickname.trim(), createId.current)
         : await join(code.trim(), nickname.trim());

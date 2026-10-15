@@ -8,6 +8,8 @@ import { equalShares, expenseSnapshot, money, parseAmount } from '../../../share
 import { CATEGORIES, type Category } from '../../../shared/types';
 
 interface ExpenseForm { amount: string; title: string; payerId: string; participantIds: string[]; category: Category; date: string; note: string; requestId: string; expectedVersion: number; expectedExpenseSnapshot?: string }
+
+// 新增和编辑共用一张表单；未提交草稿只在组件状态里，离开页面不会自动保存。
 export default function ExpensePage() {
   const { trip, tripId, user, run, reload } = useTrip();
   const router = useRouter();
@@ -16,6 +18,7 @@ export default function ExpensePage() {
   const [form, setForm] = useState<ExpenseForm | null>(null), [busy, setBusy] = useState(false);
   const initialized = useRef(''), saving = useRef(false);
   const [saveError, setSaveError] = useState('');
+  // 切换旅行、登录身份或账单时重新初始化；同一条账单内刷新 Trip 不会抹掉正在输入的内容。
   const formKey = `${tripId}_${user.id}_${expenseId || 'new'}`;
   const canEdit = trip?.status === 'active' && (!expense || expense.creatorId === user.id || trip.creatorId === user.id);
   useEffect(() => {
@@ -37,11 +40,13 @@ export default function ExpensePage() {
   let shares: Record<string, number> = {};
   try { shares = equalShares(parseAmount(form.amount), form.participantIds); } catch { /* 输入过程中允许金额尚未完整。 */ }
   const pending = trip.settlements.some(s => s.status === 'pending');
+  // 只比较正在编辑的那条账单，成员改名或新增别的费用不必打断当前编辑。
   const conflict = !!expense && (form.expectedExpenseSnapshot
     ? form.expectedExpenseSnapshot !== expenseSnapshot(expense)
     : form.expectedVersion !== trip.version);
   async function reviewLatest() {
     if (!expense || !trip || !form || saving.current) return;
+    // 用户看到两份内容后选择保留草稿，才把当前版本快照设为新的保存基线。
     const latest = expense;
     const names = (ids: string[]) => ids.map(id => trip.members.find(m => m.id === id)?.name || id).join('、');
     const summary = (value: { title: string; amount: string; category: string; date: string; payerId: string; participantIds: string[]; note: string }) =>
@@ -53,6 +58,7 @@ export default function ExpensePage() {
   async function submit() {
     if (!form || !trip || saving.current || conflict) return;
     saving.current = true; setBusy(true); setSaveError('');
+    // 区分“服务端已写入但页面跳转失败”和“请求没有确认写入”，避免误报保存结果。
     let committed = false;
     try {
       const input = { title: form.title, amount: parseAmount(form.amount), payerId: form.payerId, participantIds: form.participantIds, category: form.category, date: form.date, note: form.note };
@@ -67,6 +73,7 @@ export default function ExpensePage() {
   }
   async function remove() {
     if (!trip || !expenseId || !expense || saving.current || conflict) return;
+    // 确认框打开前固定账单快照；确认期间若别人改了账单，服务端会拒绝旧快照。
     const reviewedSnapshot = expenseSnapshot(expense);
     if (!await confirm('删除这笔账单？', '删除后会重新计算所有成员的余额，操作记录会保留。')) return;
     saving.current = true; setBusy(true); setSaveError('');

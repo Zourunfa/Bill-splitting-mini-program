@@ -3,6 +3,7 @@ import { createHandler, type Database } from '../cloud/handler';
 import { getBalances } from '../shared/ledger';
 import type { Trip } from '../shared/types';
 
+// 云函数契约测试：用内存数据库模拟事务和集合读写，不依赖真实微信云环境。
 function memoryDatabase() {
   let documents = new Map<string, Record<string, unknown>>();
   let queue = Promise.resolve();

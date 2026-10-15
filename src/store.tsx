@@ -14,16 +14,20 @@ interface LedgerStore {
   resetDemo: () => Promise<void>;
 }
 const Context = createContext<LedgerStore | null>(null);
+
+/** 页面共享的 React 状态入口：页面只关心当前用户和旅行，不直接处理存储细节。 */
 export function LedgerProvider({ children }: PropsWithChildren) {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [user, setUser] = useState<User>({ id: '', name: '旅友' });
   const [loading, setLoading] = useState(true), [error, setError] = useState('');
   const generation = useRef(0);
   const reload = useCallback(async () => {
+    // 每次读取都有递增编号；新请求先完成时，晚到的旧响应不能覆盖新数据。
     const version = ++generation.current;
     try {
       const data = await ledgerService.bootstrap();
       if (version !== generation.current) return;
+      // 服务端短暂读到旧版本时，也不能让已经显示的新账本倒退。
       setTrips(prev => data.trips.map(next => {
         const cached = prev.find(t => t.id === next.id);
         return cached && cached.version > next.version ? cached : next;
@@ -64,6 +68,7 @@ export function useTrip() {
   const stop = () => { if (timer.current) clearInterval(timer.current); timer.current = undefined; };
   useDidShow(() => {
     stop();
+    // 后端模式下重新显示页面时立即刷新，并定时同步共享账本。
     if (!isDemo) { void store.reload(); timer.current = setInterval(() => void store.reload(), 15_000); }
   });
   useDidHide(stop);
